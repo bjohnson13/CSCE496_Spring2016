@@ -1,5 +1,4 @@
-import java.util.Date;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Created by bricejohnson on 2/1/16.
@@ -13,6 +12,8 @@ public class GeneticAlgorithm
         Date date            = new Date();
         Random randomNumber  = new Random(date.getTime());
         int generationNumber = 1;
+        int myFitness        = 1;
+        Map<Integer, Integer> fitnessMap = new HashMap<Integer, Integer>();
 
         // Randomly initialize Gen 1
         System.out.println("Generation " + generationNumber + " (Initial Generation)");
@@ -24,11 +25,15 @@ public class GeneticAlgorithm
             {
                 initialGeneration[i][j] = randomNumber.nextInt(57) + 65;
             }
-            printASCIItoString(initialGeneration[i]);
+            myFitness = fitness1(initialGeneration[i]);
+            //myFitness = fitness2(initialGeneration[i]);
+            fitnessMap.put(i, myFitness); // Row, Fitness
+            //printASCIItoString(initialGeneration[i]);
+
         }
-
-
-
+        System.out.println("Unsorted: " + fitnessMap);
+        fitnessMap = sortByValue(fitnessMap);
+        System.out.println("Sorted: " + fitnessMap);
     }
 
     public static int fitness1(int[] word)
@@ -99,4 +104,26 @@ public class GeneticAlgorithm
             return word.length();
         }
     }
+
+    // Function from http://stackoverflow.com/a/109389
+    static Map sortByValue(Map map) {
+        List list = new LinkedList(map.entrySet());
+        Collections.sort(list, new Comparator() {
+            public int compare(Object o1, Object o2) {
+                return ((Comparable) ((Map.Entry) (o1)).getValue())
+                        .compareTo(((Map.Entry) (o2)).getValue());
+            }
+        });
+
+        Map result = new LinkedHashMap();
+        for (Iterator it = list.iterator(); it.hasNext();) {
+            Map.Entry entry = (Map.Entry)it.next();
+            result.put(entry.getKey(), entry.getValue());
+        }
+        return result;
+    }
 }
+
+
+
+
