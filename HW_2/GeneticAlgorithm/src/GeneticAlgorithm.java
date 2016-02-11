@@ -8,32 +8,28 @@ public class GeneticAlgorithm
 {
     public static void main(String[] args)
     {
-        int lengthOfWord     = global.getWordLength();
-        Date date            = new Date();
-        Random randomNumber  = new Random(date.getTime());
-        int generationNumber = 0;
-        int rand             = 0;
-        int myFitness        = 1;
-        int i, j             = 0;
+        int lengthOfWordToMatch          = global.getWordLength();
+        Date date                        = new Date();
+        Random randomNumber              = new Random(date.getTime());
+        int generationNumber             = 0;
         Map<Integer, Integer> fitnessMap = new HashMap<>();
-        Integer[] top8Arr = new Integer[8];
-        int[][] initialGeneration = new int[32][lengthOfWord]; // row, column
-        int[][] nextGeneration = new int[16][lengthOfWord];
-        int[][] currentGeneration = new int[16][lengthOfWord]; // row, column
+        Integer[] top8IndexArr           = new Integer[8];
+        Integer[] top8FitnessArr         = new Integer[8];
+        int[][] initialGeneration        = new int[32][lengthOfWordToMatch]; // row, column
+        int[][] nextGeneration           = new int[16][lengthOfWordToMatch];
+        int[][] currentGeneration        = new int[16][lengthOfWordToMatch];
+        int rand, wordFitness, i, j;
 
-        // Randomly initialize Gen 1
-        System.out.println("Generation " + generationNumber);
-
-
+        // Randomly initialize Generation
         for(i = 0; i < 32; i++)
         {
-            for(j = 0; j < lengthOfWord; j++)
+            for(j = 0; j < lengthOfWordToMatch; j++)
             {
                 initialGeneration[i][j] = randomNumber.nextInt(57) + 65;
             }
-            myFitness = fitness1(initialGeneration[i]);
-            //myFitness = fitness2(initialGeneration[i]);
-            fitnessMap.put(i, myFitness); // Row, Fitness
+            wordFitness = fitness2(initialGeneration[i]);
+            //wordFitness = fitness2(initialGeneration[i]);
+            fitnessMap.put(i, wordFitness); // Row, Fitness
             //printASCIItoString(initialGeneration[i]);
         }
 
@@ -41,158 +37,148 @@ public class GeneticAlgorithm
         fitnessMap = sortByValue(fitnessMap);
         for(i = 0; i < 8; i++)
         {
-            top8Arr[i] = fitnessMap.entrySet().iterator().next().getKey();
-            fitnessMap.remove(top8Arr[i]);
+            top8IndexArr[i]   = fitnessMap.entrySet().iterator().next().getKey();
+            top8FitnessArr[i] = fitnessMap.get(top8IndexArr[i]);
+            fitnessMap.remove(top8IndexArr[i]);
+            //System.out.println("Index: " + top8IndexArr[i] + " Fitness: " + top8FitnessArr[i]);
         }
         fitnessMap.clear();
-        System.out.println("Best Fitness: " + top8Arr[0]);
 
+        System.out.println("Generation " + generationNumber);
+        System.out.println("Best Fitness: " + top8FitnessArr[0]);
+        printASCIItoString(initialGeneration[top8IndexArr[0]]);
 
-        // Mate top 8, make next currentGeneration
+        // Crossover top 8, create next generation
         generationNumber++;
-        for(i = 0; i < 2; i++)
+        // Copy Parents over
+        for(i = 0; i < 8; i++)
         {
-            for(j = 0; j < (lengthOfWord / 2); j++)
-            {
-                currentGeneration[i][j] = initialGeneration[top8Arr[i]][j];
-            }
-            for(j = (lengthOfWord / 2); j < lengthOfWord; j++)
-            {
-                currentGeneration[i][j] = initialGeneration[top8Arr[i+2]][j];
-            }
-
+            System.arraycopy(initialGeneration[top8IndexArr[i]], 0, nextGeneration[i], 0, lengthOfWordToMatch);
         }
-        for(i = 2; i < 4; i++)
+        for(i = 8; i < 10; i++)
         {
-            for(j = 0; j < (lengthOfWord / 2); j++)
-            {
-                currentGeneration[i][j] = initialGeneration[top8Arr[i+2]][j];
-            }
-            for(j = (lengthOfWord / 2); j < lengthOfWord; j++)
-            {
-                currentGeneration[i][j] = initialGeneration[top8Arr[i]][j];
+            System.arraycopy(nextGeneration[i-8], 0, nextGeneration[i], 0, (lengthOfWordToMatch / 2));
+            if(lengthOfWordToMatch % 2 == 0) {
+                System.arraycopy(nextGeneration[i - 6], (lengthOfWordToMatch / 2), nextGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2));
+            } else{
+                System.arraycopy(nextGeneration[i - 6], (lengthOfWordToMatch / 2), nextGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2) + 1);
             }
         }
-        for(i = 8; i < 16; i++)
+        for(i = 12; i < 14; i++)
         {
-            for(j = 0; j < lengthOfWord; j++)
-            {
-                currentGeneration[i][j] = initialGeneration[top8Arr[i-8]][j];
+            System.arraycopy(nextGeneration[i-8], 0, nextGeneration[i], 0, (lengthOfWordToMatch / 2));
+            if(lengthOfWordToMatch % 2 == 0) {
+                System.arraycopy(nextGeneration[i - 6], (lengthOfWordToMatch / 2), nextGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2));
+            } else{
+                System.arraycopy(nextGeneration[i - 6], (lengthOfWordToMatch / 2), nextGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2) + 1);
             }
         }
 
-        fitnessMap.clear();
         // Mutation
         for(i = 0; i < 16; i++)
         {
-            for(j = 0; j < lengthOfWord; j++)
+            for(j = 0; j < lengthOfWordToMatch; j++)
             {
                 rand = randomNumber.nextInt(100);
                 if(rand < 3)
                 {
-                    currentGeneration[i][j] = randomNumber.nextInt(57) + 65;
+                    nextGeneration[i][j] = randomNumber.nextInt(57) + 65;
                 }
             }
-            myFitness = fitness1(initialGeneration[i]);
-            fitnessMap.put(i, myFitness);
+            wordFitness = fitness1(nextGeneration[i]);
+            fitnessMap.put(i, wordFitness);
         }
 
-        System.out.println("Generation " + generationNumber);
         // Choose 8 best
         fitnessMap = sortByValue(fitnessMap);
         for(i = 0; i < 8; i++)
         {
-            top8Arr[i] = fitnessMap.entrySet().iterator().next().getKey();
-            fitnessMap.remove(top8Arr[i]);
+            top8IndexArr[i]   = fitnessMap.entrySet().iterator().next().getKey();
+            top8FitnessArr[i] = fitnessMap.get(top8IndexArr[i]);
+            fitnessMap.remove(top8IndexArr[i]);
+            //System.out.println("Index: " + top8IndexArr[i] + " Fitness: " + top8FitnessArr[i]);
         }
         fitnessMap.clear();
-        System.out.println("Best Fitness: " + top8Arr[0]);
 
+        System.out.println("--------------");
+        System.out.println("Generation " + generationNumber);
+        System.out.println("Best Fitness: " + top8FitnessArr[0]);
+        printASCIItoString(nextGeneration[top8IndexArr[0]]);
 
+// ====================================================================================================================================================================================
+// ====================================================================================================================================================================================
+// ====================================================================================================================================================================================
+// ====================================================================================================================================================================================
 
-
-
-     // =============================== =============================== =============================== ===============================
-        // =============================== =============================== =============================== ===============================
-        // =============================== =============================== =============================== ===============================
-        // =============================== =============================== =============================== ===============================
-
-
-        // Repeat until conditions are met
-        while((generationNumber != 1000) && (top8Arr[0] != 0))
+        while((generationNumber != 100000000) && (top8FitnessArr[0] != 0))
         {
             generationNumber++;
+            //System.out.println("Generation " + generationNumber);
+            //System.out.println("Generation " + generationNumber);
+            printASCIItoString(nextGeneration[top8IndexArr[0]]);
 
-            // Mate top 8, make currentGeneration
-            for(i = 0; i < 2; i++)
+            // Crossover top 8
+            for(i = 0; i < 8; i++)
             {
-                for(j = 0; j < (lengthOfWord / 2); j++)
-                {
-                    nextGeneration[i][j] = currentGeneration[top8Arr[i]][j];
-                }
-                for(j = (lengthOfWord / 2); j < lengthOfWord; j++)
-                {
-                    nextGeneration[i][j] = currentGeneration[top8Arr[i+2]][j];
-                }
-
+                System.arraycopy(nextGeneration[top8IndexArr[i]], 0, currentGeneration[i], 0, lengthOfWordToMatch);
             }
-            for(i = 2; i < 4; i++)
+            for(i = 8; i < 10; i++)
             {
-                for(j = 0; j < (lengthOfWord / 2); j++)
-                {
-                    nextGeneration[i][j] = currentGeneration[top8Arr[i+2]][j];
-                }
-                for(j = (lengthOfWord / 2); j < lengthOfWord; j++)
-                {
-                    nextGeneration[i][j] = currentGeneration[top8Arr[i]][j];
+                System.arraycopy(currentGeneration[i-8], 0, currentGeneration[i], 0, (lengthOfWordToMatch / 2));
+                if(lengthOfWordToMatch % 2 == 0) {
+                    System.arraycopy(currentGeneration[i - 6], (lengthOfWordToMatch / 2), currentGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2));
+                } else{
+                    System.arraycopy(currentGeneration[i - 6], (lengthOfWordToMatch / 2), currentGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2) + 1);
                 }
             }
-            for(i = 8; i < 16; i++)
-            {
-                for(j = 0; j < lengthOfWord; j++)
-                {
-                    nextGeneration[i][j] = currentGeneration[top8Arr[i-8]][j];
+            for(i = 12; i < 14; i++) {
+                System.arraycopy(currentGeneration[i - 8], 0, currentGeneration[i], 0, (lengthOfWordToMatch / 2));
+                if (lengthOfWordToMatch % 2 == 0) {
+                    System.arraycopy(currentGeneration[i - 6], (lengthOfWordToMatch / 2), currentGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2));
+                } else {
+                    System.arraycopy(currentGeneration[i - 6], (lengthOfWordToMatch / 2), currentGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2) + 1);
                 }
             }
 
             // Mutation
-            fitnessMap.clear();
             for(i = 0; i < 16; i++)
             {
-                for(j = 0; j < lengthOfWord; j++)
+                for(j = 0; j < lengthOfWordToMatch; j++)
                 {
                     rand = randomNumber.nextInt(100);
                     if(rand < 3)
                     {
-                        currentGeneration[i][j] = randomNumber.nextInt(57) + 65;
+                        nextGeneration[i][j] = randomNumber.nextInt(57) + 65;
+                    }else{
+                        nextGeneration[i][j] = currentGeneration[i][j];
                     }
-                    else
-                    {
-                        currentGeneration[i][j] = nextGeneration[i][j];
-                    }
+
                 }
-                // Generate Fitness
-                myFitness = fitness1(currentGeneration[i]);
-                fitnessMap.put(i, myFitness);
+                wordFitness = fitness2(nextGeneration[i]);
+                fitnessMap.put(i, wordFitness);
             }
 
-            //System.out.println("Generation " + generationNumber);
             // Choose 8 best
             fitnessMap = sortByValue(fitnessMap);
             for(i = 0; i < 8; i++)
             {
-                top8Arr[i] = fitnessMap.entrySet().iterator().next().getKey();
-                fitnessMap.remove(top8Arr[i]);
+                top8IndexArr[i]   = fitnessMap.entrySet().iterator().next().getKey();
+                top8FitnessArr[i] = fitnessMap.get(top8IndexArr[i]);
+                fitnessMap.remove(top8IndexArr[i]);
+                //System.out.println("Index: " + top8IndexArr[i] + " Fitness: " + top8FitnessArr[i]);
             }
             fitnessMap.clear();
-            System.out.println("Best Fitness: " + top8Arr[0]);
 
-
-
+            /*System.out.println("--------------");
+            System.out.println("Generation " + generationNumber);
+            System.out.println("Best Fitness: " + top8FitnessArr[0]);
+            printASCIItoString(nextGeneration[top8IndexArr[0]]);
+            */
         }
-        System.out.println("Generation: " + generationNumber);
-        printASCIItoString(currentGeneration[top8Arr[0]]);
-
+        System.out.println("--------------");
+        System.out.println("Generation " + generationNumber);
+        System.out.println("Best Fitness: " + top8FitnessArr[0]);
+        printASCIItoString(nextGeneration[top8IndexArr[0]]);
     }
 
     public static int fitness1(int[] word)
@@ -255,8 +241,9 @@ public class GeneticAlgorithm
 
     public static class global
     {
-        //public static String word = "HeuristicSE_andAI";
-        public static String word = "Brice";
+        public static String word = "HeuristicSE_andAI";
+        //public static String word = "HeuristicSE";
+        //public static String word = "Brice";
 
         public static int getWordLength()
         {
@@ -282,7 +269,3 @@ public class GeneticAlgorithm
         return result;
     }
 }
-
-
-
-
