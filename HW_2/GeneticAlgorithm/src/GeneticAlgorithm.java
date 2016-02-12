@@ -11,24 +11,37 @@ public class GeneticAlgorithm
         int lengthOfWordToMatch          = global.getWordLength();
         Date date                        = new Date();
         Random randomNumber              = new Random(date.getTime());
-        int generationNumber             = 0;
         Map<Integer, Integer> fitnessMap = new HashMap<>();
         Integer[] top8IndexArr           = new Integer[8];
         Integer[] top8FitnessArr         = new Integer[8];
         int[][] initialGeneration        = new int[32][lengthOfWordToMatch]; // row, column
         int[][] nextGeneration           = new int[16][lengthOfWordToMatch];
         int[][] currentGeneration        = new int[16][lengthOfWordToMatch];
+        int generationNumber             = 0;
         int rand, wordFitness, i, j;
 
-        // Randomly initialize Generation
+        // ============================================
+        // ============================================
+        // Choose which fitness function to run
+        // 1 - Distance
+        // 2 - Does the character match
+        int CHOOSE_FITNESS_FUNCTION = 2;
+        int MAX_NUM_OF_GENERATIONS = 20000000;
+        // ============================================
+        // ============================================
+
+        // Randomly initialize Generation 0
         for(i = 0; i < 32; i++)
         {
             for(j = 0; j < lengthOfWordToMatch; j++)
             {
                 initialGeneration[i][j] = randomNumber.nextInt(57) + 65;
             }
-            wordFitness = fitness2(initialGeneration[i]);
-            //wordFitness = fitness2(initialGeneration[i]);
+            if(CHOOSE_FITNESS_FUNCTION == 1) {
+                wordFitness = fitness1(initialGeneration[i]);
+            }else {
+                wordFitness = fitness2(initialGeneration[i]);
+            }
             fitnessMap.put(i, wordFitness); // Row, Fitness
             //printASCIItoString(initialGeneration[i]);
         }
@@ -51,6 +64,7 @@ public class GeneticAlgorithm
         // Crossover top 8, create next generation
         generationNumber++;
         // Copy Parents over
+
         for(i = 0; i < 8; i++)
         {
             System.arraycopy(initialGeneration[top8IndexArr[i]], 0, nextGeneration[i], 0, lengthOfWordToMatch);
@@ -85,7 +99,11 @@ public class GeneticAlgorithm
                     nextGeneration[i][j] = randomNumber.nextInt(57) + 65;
                 }
             }
-            wordFitness = fitness1(nextGeneration[i]);
+            if(CHOOSE_FITNESS_FUNCTION == 1) {
+                wordFitness = fitness1(nextGeneration[i]);
+            }else {
+                wordFitness = fitness2(nextGeneration[i]);
+            }
             fitnessMap.put(i, wordFitness);
         }
 
@@ -110,12 +128,17 @@ public class GeneticAlgorithm
 // ====================================================================================================================================================================================
 // ====================================================================================================================================================================================
 
-        while((generationNumber != 100000000) && (top8FitnessArr[0] != 0))
+        while((generationNumber != MAX_NUM_OF_GENERATIONS) && (top8FitnessArr[0] != 0))
         {
             generationNumber++;
-            //System.out.println("Generation " + generationNumber);
-            //System.out.println("Generation " + generationNumber);
-            printASCIItoString(nextGeneration[top8IndexArr[0]]);
+            // ============================================
+            // ============================================
+            // Info to print for each generation
+            //System.out.println("Generation " + generationNumber);     // Generation Number
+            printASCIItoString(nextGeneration[top8IndexArr[0]]);      // Best mathcing String
+            //System.out.println("Best Fitness: " + top8FitnessArr[0]); // Best fitness
+            // ============================================
+            // ============================================
 
             // Crossover top 8
             for(i = 0; i < 8; i++)
@@ -154,7 +177,11 @@ public class GeneticAlgorithm
                     }
 
                 }
-                wordFitness = fitness2(nextGeneration[i]);
+                if(CHOOSE_FITNESS_FUNCTION == 1) {
+                    wordFitness = fitness1(nextGeneration[i]);
+                }else {
+                    wordFitness = fitness2(nextGeneration[i]);
+                }
                 fitnessMap.put(i, wordFitness);
             }
 
@@ -168,24 +195,22 @@ public class GeneticAlgorithm
                 //System.out.println("Index: " + top8IndexArr[i] + " Fitness: " + top8FitnessArr[i]);
             }
             fitnessMap.clear();
-
-            /*System.out.println("--------------");
-            System.out.println("Generation " + generationNumber);
-            System.out.println("Best Fitness: " + top8FitnessArr[0]);
-            printASCIItoString(nextGeneration[top8IndexArr[0]]);
-            */
         }
         System.out.println("--------------");
         System.out.println("Generation " + generationNumber);
         System.out.println("Best Fitness: " + top8FitnessArr[0]);
+        System.out.println("Word to Match: " + global.word);
+        System.out.print("Word Found:    ");
         printASCIItoString(nextGeneration[top8IndexArr[0]]);
+
     }
 
     public static int fitness1(int[] word)
     {
         int[] wordToMatch = stringToASCII(global.word);
         int lengthOfWord = wordToMatch.length;
-        int fitness = 0, number = 0, i;
+        int fitness = 0;
+        int number, i;
 
         for(i = 0; i < lengthOfWord; i++)
         {
@@ -241,9 +266,12 @@ public class GeneticAlgorithm
 
     public static class global
     {
-        public static String word = "HeuristicSE_andAI";
-        //public static String word = "HeuristicSE";
-        //public static String word = "Brice";
+        //public static String word = "HeuristicSE_andAI"; // Fail: 2, 20000000
+        //public static String word = "HeuristicSE_andA";  // Works: 2, 10000000
+        public static String word = "HeuristicSE_and";   // Works: 2, 10000000
+        //public static String word = "HeuristicSE_an";    // Works: 2, 10000000
+        //public static String word = "BriceJohnson";      // Works: 2, 10000000
+        //public static String word = "Brice";             // Works: 1, 10000000
 
         public static int getWordLength()
         {
