@@ -11,21 +11,25 @@ public class GeneticAlgorithm
         int lengthOfWordToMatch          = global.getWordLength();
         Date date                        = new Date();
         Random randomNumber              = new Random(date.getTime());
-        Map<Integer, Integer> fitnessMap = new HashMap<>();
+        Map<Integer, Integer> fitnessMap = new HashMap<>(); // Row, fitness
         Integer[] top8IndexArr           = new Integer[8];
         Integer[] top8FitnessArr         = new Integer[8];
         int[][] initialGeneration        = new int[32][lengthOfWordToMatch]; // row, column
         int[][] nextGeneration           = new int[16][lengthOfWordToMatch];
         int[][] currentGeneration        = new int[16][lengthOfWordToMatch];
         int generationNumber             = 0;
-        int rand, wordFitness, i, j;
+        int mutationRate                 = 7;
+        int wordFitness, i, j;
+        int mutationX;
+        int mutationY;
+        int crossoverPoint;
 
         // ============================================
         // ============================================
         // Choose which fitness function to run
         // 1 - Distance
         // 2 - Does the character match
-        int CHOOSE_FITNESS_FUNCTION = 2;
+        int CHOOSE_FITNESS_FUNCTION = 1;
         int MAX_NUM_OF_GENERATIONS = 20000000;
         // ============================================
         // ============================================
@@ -35,14 +39,14 @@ public class GeneticAlgorithm
         {
             for(j = 0; j < lengthOfWordToMatch; j++)
             {
-                initialGeneration[i][j] = randomNumber.nextInt(57) + 65;
+                initialGeneration[i][j] = randomNumber.nextInt(57) + 65; // Characters in ASCII: A(65) - z(122)
             }
             if(CHOOSE_FITNESS_FUNCTION == 1) {
                 wordFitness = fitness1(initialGeneration[i]);
             }else {
                 wordFitness = fitness2(initialGeneration[i]);
             }
-            fitnessMap.put(i, wordFitness); // Row, Fitness
+            fitnessMap.put(i, wordFitness);
             //printASCIItoString(initialGeneration[i]);
         }
 
@@ -63,42 +67,42 @@ public class GeneticAlgorithm
 
         // Crossover top 8, create next generation
         generationNumber++;
-        // Copy Parents over
-
         for(i = 0; i < 8; i++)
         {
             System.arraycopy(initialGeneration[top8IndexArr[i]], 0, nextGeneration[i], 0, lengthOfWordToMatch);
         }
         for(i = 8; i < 10; i++)
         {
-            System.arraycopy(nextGeneration[i-8], 0, nextGeneration[i], 0, (lengthOfWordToMatch / 2));
+            crossoverPoint = randomNumber.nextInt(lengthOfWordToMatch);
+            System.arraycopy(nextGeneration[i-8], 0, nextGeneration[i], 0, crossoverPoint);
             if(lengthOfWordToMatch % 2 == 0) {
-                System.arraycopy(nextGeneration[i - 6], (lengthOfWordToMatch / 2), nextGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2));
+                System.arraycopy(nextGeneration[i - 6], crossoverPoint, nextGeneration[i], crossoverPoint, (lengthOfWordToMatch - crossoverPoint));
             } else{
-                System.arraycopy(nextGeneration[i - 6], (lengthOfWordToMatch / 2), nextGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2) + 1);
+                System.arraycopy(nextGeneration[i - 6], crossoverPoint, nextGeneration[i], crossoverPoint, (lengthOfWordToMatch - crossoverPoint));
             }
         }
         for(i = 12; i < 14; i++)
         {
-            System.arraycopy(nextGeneration[i-8], 0, nextGeneration[i], 0, (lengthOfWordToMatch / 2));
+            crossoverPoint = randomNumber.nextInt(lengthOfWordToMatch);
+            System.arraycopy(nextGeneration[i-8], 0, nextGeneration[i], 0, crossoverPoint);
             if(lengthOfWordToMatch % 2 == 0) {
-                System.arraycopy(nextGeneration[i - 6], (lengthOfWordToMatch / 2), nextGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2));
+                System.arraycopy(nextGeneration[i - 6], crossoverPoint, nextGeneration[i], crossoverPoint, (lengthOfWordToMatch - crossoverPoint));
             } else{
-                System.arraycopy(nextGeneration[i - 6], (lengthOfWordToMatch / 2), nextGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2) + 1);
+                System.arraycopy(nextGeneration[i - 6], crossoverPoint, nextGeneration[i], crossoverPoint, (lengthOfWordToMatch - crossoverPoint));
             }
         }
 
         // Mutation
+        for(i = 0; i < mutationRate; i++) // 8 is 0.03 of 16*17
+        {
+            mutationX = randomNumber.nextInt(lengthOfWordToMatch);
+            mutationY = randomNumber.nextInt(16);
+            nextGeneration[mutationY][mutationX] = randomNumber.nextInt(57) + 65;
+        }
+
+        // Calculate fitness
         for(i = 0; i < 16; i++)
         {
-            for(j = 0; j < lengthOfWordToMatch; j++)
-            {
-                rand = randomNumber.nextInt(100);
-                if(rand < 3)
-                {
-                    nextGeneration[i][j] = randomNumber.nextInt(57) + 65;
-                }
-            }
             if(CHOOSE_FITNESS_FUNCTION == 1) {
                 wordFitness = fitness1(nextGeneration[i]);
             }else {
@@ -135,7 +139,7 @@ public class GeneticAlgorithm
             // ============================================
             // Info to print for each generation
             //System.out.println("Generation " + generationNumber);     // Generation Number
-            printASCIItoString(nextGeneration[top8IndexArr[0]]);      // Best mathcing String
+            printASCIItoString(nextGeneration[top8IndexArr[0]]);      // Best matching String
             //System.out.println("Best Fitness: " + top8FitnessArr[0]); // Best fitness
             // ============================================
             // ============================================
@@ -147,35 +151,38 @@ public class GeneticAlgorithm
             }
             for(i = 8; i < 10; i++)
             {
-                System.arraycopy(currentGeneration[i-8], 0, currentGeneration[i], 0, (lengthOfWordToMatch / 2));
+                crossoverPoint = randomNumber.nextInt(lengthOfWordToMatch);
+                System.arraycopy(currentGeneration[i-8], 0, currentGeneration[i], 0, crossoverPoint);
                 if(lengthOfWordToMatch % 2 == 0) {
-                    System.arraycopy(currentGeneration[i - 6], (lengthOfWordToMatch / 2), currentGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2));
+                    System.arraycopy(currentGeneration[i - 6], crossoverPoint, currentGeneration[i], crossoverPoint, (lengthOfWordToMatch -crossoverPoint));
                 } else{
-                    System.arraycopy(currentGeneration[i - 6], (lengthOfWordToMatch / 2), currentGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2) + 1);
+                    System.arraycopy(currentGeneration[i - 6], crossoverPoint, currentGeneration[i], crossoverPoint, (lengthOfWordToMatch -crossoverPoint));
                 }
             }
             for(i = 12; i < 14; i++) {
-                System.arraycopy(currentGeneration[i - 8], 0, currentGeneration[i], 0, (lengthOfWordToMatch / 2));
-                if (lengthOfWordToMatch % 2 == 0) {
-                    System.arraycopy(currentGeneration[i - 6], (lengthOfWordToMatch / 2), currentGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2));
-                } else {
-                    System.arraycopy(currentGeneration[i - 6], (lengthOfWordToMatch / 2), currentGeneration[i], (lengthOfWordToMatch / 2), (lengthOfWordToMatch / 2) + 1);
+                crossoverPoint = randomNumber.nextInt(lengthOfWordToMatch);
+                System.arraycopy(currentGeneration[i-8], 0, currentGeneration[i], 0, crossoverPoint);
+                if(lengthOfWordToMatch % 2 == 0) {
+                    System.arraycopy(currentGeneration[i - 6], crossoverPoint, currentGeneration[i], crossoverPoint, (lengthOfWordToMatch - crossoverPoint));
+                } else{
+                    System.arraycopy(currentGeneration[i - 6], crossoverPoint, currentGeneration[i], crossoverPoint, (lengthOfWordToMatch - crossoverPoint));
                 }
             }
 
             // Mutation
+            for(i = 0; i < mutationRate; i++)
+            {
+                mutationX = randomNumber.nextInt(lengthOfWordToMatch);
+                mutationY = randomNumber.nextInt(16);
+                currentGeneration[mutationY][mutationX] = randomNumber.nextInt(57) + 65;
+            }
+
+            // Calculate fitness
             for(i = 0; i < 16; i++)
             {
                 for(j = 0; j < lengthOfWordToMatch; j++)
                 {
-                    rand = randomNumber.nextInt(100);
-                    if(rand < 3)
-                    {
-                        nextGeneration[i][j] = randomNumber.nextInt(57) + 65;
-                    }else{
-                        nextGeneration[i][j] = currentGeneration[i][j];
-                    }
-
+                    nextGeneration[i][j] = currentGeneration[i][j];
                 }
                 if(CHOOSE_FITNESS_FUNCTION == 1) {
                     wordFitness = fitness1(nextGeneration[i]);
@@ -266,12 +273,8 @@ public class GeneticAlgorithm
 
     public static class global
     {
-        //public static String word = "HeuristicSE_andAI"; // Fail: 2, 20000000
-        //public static String word = "HeuristicSE_andA";  // Works: 2, 10000000
-        public static String word = "HeuristicSE_and";   // Works: 2, 10000000
-        //public static String word = "HeuristicSE_an";    // Works: 2, 10000000
-        //public static String word = "BriceJohnson";      // Works: 2, 10000000
-        //public static String word = "Brice";             // Works: 1, 10000000
+        public static String word = "HeuristicSE_andAI"; // Works: 2
+        //public static String word = "Brice_J";
 
         public static int getWordLength()
         {
